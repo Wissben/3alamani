@@ -340,6 +340,9 @@
 			\end{itemize} 
 			\par 
 			Il a noté que tout ces scripts utilisent des fonctions d'organisation communes, pour placer chaque fichier acquis dans son répertoire adéquat dans l'arborescence créée par \textbf{initializer.py}, cela a pour but de faciliter l'accès ultérieur aux données bruts, pour les nettoyer et construire les corpus au format \textbf{XML}.
+			\par 
+			Autre point important, durant l'aspiration des données, on s'est souvent retrouvé dans le cas où l'information sur la période historique manquait, pour palier à ce problème, et puisque la plus part des documents disposent d'un auteur, nous avons utilisé l'API Wikipédia pour rechercher les informations liées à l'auteur (Date de naissance,mort,nationalité ...), déterminant ainsi la période dans la quelle l'ouvrage a été rédigé.
+			 
 		\subsection{Organisateur de corpus}
 			\paragraph{}
 			Ce module est composé principalement d'un seul script qui effectue deux tâches, une fonction de nettoyage \textbf{"cleaner"}, et un constructeur de fichiers \textbf{\_cleanNotFound} pour générer le fichier \textbf{XML} associé a chaque texte brut extrait.
@@ -415,10 +418,17 @@
 				def lemma_words(self, fileid=None,start=None,end=None,era=None,category=None):\end{lstlisting}
 				Retourne une liste de de tout les lemmes (forme infléchie des mots) du corpus (ou d'une partie du corpus) 
 				
-				
+				\item 
+				\begin{lstlisting}[language=python]
+				def getAppearances(get_sents,refresh=False):\end{lstlisting}
+				Méthode utilisant un Generator(voir MMMM) pour parcourir les corpus, en extraire les portions de texte qui contiennent un des mots passé en paramètre, cette méthode sera utilisée dans le mode-automatique (VOIR HHSDJHSD).
 			\end{itemize}
-			\paragraph{}
-			Le CorpusReader est invoqué principalement durant l'initialisation du serveur (avant l'utilisation de l'application), et cela pour garantir une utilisation plus aisée de l'application après déploiement. Il reste donc à voir comment le serveur remplit la base de données. 
+			\paragraph{Remarque}
+			La force majeure de ce module est qu'il fait appel a plusieurs "Generator"\footnote{Les Generators dans python sont des fonctions qui se comportent comme un Iterator, c'est ç dire qu'il peuvent être utilisé dans une boucle}, en effet, par souci de performance, sachant que nous disposant d'un très gros volume de données sur le disque, charger toutes ces données dans la mémoire à chaque appel d'une des fonctions méthodes du corpusReader serait très coûteux en terme de temps
+			et d'espace, l'utilisation de Generators permet donc de palier à ce problème en ne chargeant en mémoire que le peu d'information dont on a besoin, c'est une génération de valeurs \textbf{à la demande}, évitant ainsi une sur-utilisation de l'espace mémoire.
+			
+			\par
+			Il reste donc à voir comment le serveur remplit la base de données. 
 		\subsection{Base de données}
 			\paragraph{}
 			Le but d'avoir cette base de données et principalement de stocker les différentes méta-données sur les documents du corpus, ainsi que les relations entres les contenus des documents, cela facilitera la tâche au serveur de ne considérer que le niveau le plus abstrait des données, et laisser la tâche de récupérer et manipuler ses données au CorpusReader.
@@ -438,25 +448,7 @@
 				\item \href{https://www.almaany.com/ar/dict/ar-ar/}{\<المعجم الجامع >}
 				\item \href{http://waqfeya.com/book.php?bid=210}{\<المعجم الوسيط> }
 			\end{itemize}
-			Nous avons tout d'abord transformer les entrées du dictionnaire en un fichier \textbf{JSON} dont le format est le suivant : 
-			\begin{lstlisting}[language=json,firstnumber=1]
-			{
-				"root"	 : 	{
-							"postag-1"	:	[
-								"def-1",
-								...
-							],
-							
-							...
-							
-							"postag-n"	:	[
-							"def-1",
-							...
-							]
-				},...
-						
-			}
-			\end{lstlisting}
+			
 		\subsection{Application (Front-end et Back-end)}	
 			\paragraph{Back-end :}
 			C'est une application web qui expose une api REST-ful , elle est accessible a partir de certains \textbf{endpoints}\footnote{Emplacement dans le serveur renvoyant une réponse à une requête } qui seront exploités avec
@@ -468,6 +460,12 @@
 	\section{Déploiement des modules dans le cloud}
 		\paragraph{}
 		Nous avons choisi de déployer notre application suivant une architecture server-less dans le but de faciliter son utilisation, de la rendre publique et disponible à tout ceux qui voudraient la tester, donner un feedback ou proposer une amélioration en consultant le dépôt sur \href{https://github.com/mohammedi-haroune/arabic-historical-dictionary-frontend}{Github}
+		\par 
+		Le diagramme suivant résume le processus de communication entre les composantes du système dans le cloud : 
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width=0.75\linewidth]{images/cloud_schema.png}
+		\end{figure}
 	\section{Conclusion}
 		\paragraph{}
 		Au terme de chapitre, nous avons donc fais le tour des principales composantes du système, sans trop rentrer dans les détails, nous introduirons les composantes non-citées dans le chapitre suivant lors de la présentation des fonctionnalités de l'application si besoin est.  
@@ -534,25 +532,27 @@
 		\subsection{Interface principale}
 			\paragraph{}
 			L'application se présente comme composé de trois partie, une barre d'outils en haut, un panneau d'onglet latéral permettant d'accéder au différentes section de l'application, et une zone d'affichage principale pour afficher le contenu de chaque section. 
-		\subsection{Corpus}
+		\subsection{Ajouter corpus}
+		\Large{\< أضف الملفات >}
 			\paragraph{}
 			Dans cette section, la main est donné à l'utilisateur pour uploader un nouveau corpus sur le serveur principal,  il suffit de donner un nom au corpus, une description pour faciliter son utilisation, et sélectionner les fichiers \textbf{XML} correspondant au corpus.
 			
 			%Upload new corpus into the server
-		\subsection{Corpus Browser}
+		\subsection{Explorateur de corpus }
+		\Large{\<تصفح الملفات> }
 			\paragraph{}
 			\begin{figure}[H]
 				\centering
 				\includegraphics[width=0.8\linewidth]{images/app/corpusbrowser.png}
 			\end{figure}
 			Dans cette section, l'utilisateur pourra parcourir chaque composant du corpus, le choix lui est donné pour filtrer 
-			sa recherche, que ce soit par période (\<الفترة الزمنية>), par section (\<قسم>) ou par mots clés, le résultats est une succession de pages dynamiquement ajoutées à la mémoire (grâce au corpus-reader), chaque page est composé de tuile contenant les informations relatives au documents pertinents selon le filtre de recherche.
+			sa recherche, que ce soit par période (\<الفترة الزمنية>), par section (\<قسم>) ou par mots clés, le résultat est une succession de pages dynamiquement ajoutées à la mémoire (grâce au corpusReader), chaque page est composé de tuile contenant les informations relatives au documents pertinents selon le filtre de recherche.
 			\par
 			En cliquant sur le bouton \textbf{content} (\<المحتوى >), une nouvelle section est affichée, elle permet à l'utilisateur 
-			de lire le fichier sélectionné. De plus s'il désire ajouter une nouvelle entrée au dictionnaire historique, il lui suffit de sélectionner la partie du texte qui l'intéresse , une liste déroulante s'affiche lui proposant d'ajouter un des mots précédemment sélectionnes au dictionnaire (nous verrons les détails de cette opération das la section suivante).
-			
+			de lire le fichier sélectionné. De plus s'il désire ajouter une nouvelle entrée au dictionnaire historique, il lui suffit de sélectionner la partie du texte qui l'intéresse , une liste déroulante s'affiche lui proposant d'ajouter un des mots précédemment sélectionnes au dictionnaire (nous verrons les détails de cette opération das la section suivante) en remplissant automatiquement les camps nécessaire.
 			%Explore the corporas
-		\subsection{Add Entry}
+		\subsection{Ajouter entrée}
+		\Large{\<أضف مصلح>}
 			\paragraph{}
 			\begin{figure}[H]
 				\centering
@@ -565,10 +565,11 @@
 				L'utilisateur pourra répéter ce processus autant de fois qu'il désire ajouter de sens au terme.
 				
 				\item Une liste de lignes réservées aux information chronologiques (\<الأمثلة التاريخية>), il faudra fournir la période historique (\<الفترة الزمنية>), la section visée (\<القسم>) , le document (\<الوثيقة>) puis finalement
-				un exemple d'utilisation (\<الجملة>), un champ \textbf{confirmé} est à cocher pour valider la informations saisies, sinon l'ajout n'est pas autorisé.
+				un exemple d'utilisation (\<الجملة>), un champ \textbf{confirmé} est à cocher pour valider les informations saisies, sinon l'ajout n'est pas autorisé.
 			\end{itemize}
 			%Add new entries into the historical dico
-		\subsection{Dictionary}
+		\subsection{Dictionnaire}
+		\Large{\<القاموس>}
 			\paragraph{}
 			\begin{figure}[H]
 				\centering
@@ -578,13 +579,14 @@
 			au mots auquel on s'intéresse.
 %			All the words from the classical dico
 			
-		\subsection{Historical dictionary}
+		\subsection{Dictionnaire historique}
+		\Large{\<القاموس التاريخي>}
 			\paragraph{}
 			\begin{figure}[H]
 				\centering
 				\includegraphics[width=0.8\linewidth]{images/app/histdico.png}
 			\end{figure}
-			Dans cette section, nous trouverons notre dictionnaire historique, organisé comme un dictionnaire classique avec des entrées(des mots) et leurs définitions, mais avec l'option de consulter les différentes utilisation du mot lors des siècles en cliquant sur un bouton, une timeline s'affiche en donnant un récapitulatif chronologique du mot : 
+			Dans cette section, nous trouverons notre dictionnaire historique, organisé comme un dictionnaire classique avec des entrées(des mots) et leurs définitions, mais avec l'option de consulter les différentes utilisation du mot lors des siècles en cliquant sur un bouton, une timeline\footnote{Ligne chronologique passant par les périodes historiques} s'affiche en donnant un récapitulatif chronologique du mot : 
 			
 			\begin{figure}[H]
 				\centering
@@ -592,20 +594,42 @@
 			\end{figure}
 			\par
 			L'option \textbf{+} permet de modifier cette entrée, elle renvoie à la section \textbf{add-entry} mais avec le champs \textbf{terme} déjà rempli avec le terme courant à modifier.
+			
 %		All the words from the historical dico
-		\subsection{Graphs}
+		\subsection{Statistiques}
+		\Large{\<إحصائيات>}
 			\paragraph{}
 			Display different statistics for some words
 	\section{Fonctions supplémentaires}
-	
+		\subsection{Mode-automatique}
+		\paragraph{}
+		 Le but de ce mode, est l'ajout automatique de nouvelles entrées dans le dictionnaire historique, en recevant en entrée une liste de mot, et en matchant les apparitions de ces mots dans le corpus, récupérant ainsi les méta-données nécessaires pour 
+		 créer (résp. modifier) une entrée. 
 	\section{Conclusion}
-
+		\paragraph{}
+		Au terme de projet, nous avons donc présenté les principales fonctionnalités de notre application, néanmoins, par des soucis de concision et de brièveté, des fonctionnalité internes n'ont pas été mises en avant, la documentation (manuel d'utilisation fournira plus de détails sur ces dernières).
 
 \chapter{Conclusion générale}
-\section{Objectifs atteints}
-\section{Limites du système}
-\section{Perspectives futures}		
-
+	
+	\section{Objectifs atteints}
+	\paragraph{}
+	Durant ce projet, nous avons tenté de proposer une contribution à la résolution d'une problématique datant de plusieurs siècles, qui est l'élaboration d'outils pour accélérer le processus de construction d'un recueil lexicographique historique de notre langue maternelle. Ayant un tel objectif en tête ainsi qu'en travaillant avec des données réelles tout en utilisant des technologies récentes, les adaptant à notre problématique, a permit de mieux apprécier le fruit du travail fournit pour la 
+	réalisation de ce projet.
+	\par 
+	Néanmoins cela reste un modeste travail, très incomplet et présentant beaucoup de lacunes que nous allons mentionner dans la section suivante.
+	\section{Limites du système}
+		\paragraph{}
+		Notre décision de déployer l'application sur une plateforme enligne nous a poussé a revoir nombre de fois notre conception, essayant d'optimiser les opération internes, de minimiser le temps de latence pour q'un utilisateur profite d'une expérience fluide et agréable, cependant, n'ayant pas à notre disposition un serveur assez puissant (en y ajoutant les possibles erreurs de conception pour la gestion des ressources), en y ajoutant le très grand volume de données à traiter, le système peut souffrir d'un temps de réponses très instable.
+		\par 
+		Un autre point à soulever est la simplicité du mode automatique, le matching se faisant d'une manière rudimentaire, consomme trop de temps et ne prend pas en compte le contexte d'apparition des mots.
+	\section{Perspectives futures}		
+		\paragraph{}
+		Parmi les améliorations qui serait possibles, nous citerons :
+		\begin{itemize}
+			\item l'utilisation de techniques de TALN ou NLU(Natural Langage Understanding) pour améliorer le filtrage des mots dans le mode automatique, ajouter une couche sémantique permettrait de catégoriser les mots selon leurs sens.
+			\item Monopoliser plus de ressources (du coté du serveur) pour améliorer les performances lors de l'utilisation.
+			\item Continuer l'intégration de nouvelles sources  de données dans le corpus, pour enrichir ce dernier avec de la quantité, de la qualité et de la variété. 
+		\end{itemize}
 %mode auto is simple: 
 %3andek f corpus method trodlek "apparition generator"  tmedelha list of words, and restrictions over corpus like category, era, fileid .. ou howa idir lemma sentences ta3 corpus and each time issib a word fhadouk lemmas irodlek the word m3a (fileid, sentence position fel file, word position fel sentence, a chunk of the sentence[optional]
 \bibliographystyle{ieeetr}
