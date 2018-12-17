@@ -245,7 +245,7 @@
 
 \listoffigures
 	
-\chapter{Motivations et problématique}
+\chapter{Motivations et problematique}
 	\section{Introduction}
 		\paragraph{}
 		Depuis son apparition (au IIe siècle), la langue arabe n'a cessé d'évoluer, donnant naissance à de nouveaux mots, ou modifiant le sens de mots existants. Cette évolution a particulièrement enrichi le vocabulaire de la langue de l'islam, en conséquent et au fil du temps, plusieurs ouvrages destiné a recenser les différentes définitions et sens d'un mot ont vu le jour, chacun durant sa période. néanmoins,  il est primordial de garder une trace des différents changement qui ont eu lieu sur ces mots, et cela depuis leurs émergence. C'est avec cette idée en tête que les lexicographes des temps modernes en eu l'initiative d'entamer la construction de dictionnaires historiques afin de regrouper toutes les nuances des mots a travers les ages.
@@ -320,9 +320,9 @@
 			Le module d'aspiration est composé de plusieurs petits scripts,
 			le premier d'entre eux  \textbf{initializer.py} , son rôle est d'initialiser certaines
 			variables globales (comme les dates de début/fin des périodes historiques de la langue arabe (\<العصر الجاهلي, عصر صدر الإسلام ... >), ou encore les chemins d'accès des différents fichiers récupérés et des fichiers xml produits.
-			Il permet aussi la création dynamique d'une arborescence de répertoire où placer chaque fichier aspiré selon son époque, son genre, son type ...
+			Il permet aussi la création dynamique d'une arborescence de répertoire où placer chaque fichier aspiré selon son époque et son genre.
 			\par 
-			Les autres scripts sont destiné à aspirer un type de document en particulier, nous pouvons citer les différents \textbf{"scrappeur"}\footnote{Terme anglais pour désigner un aspirateur de site web} utilisé : 
+			Les autres scripts sont destiné à aspirer les documents d'internet en faisant appel aux fonctions définies par le module précédent afin que l'organisation des fichiers brutes se fait de la même manière pour tous les scripts. Nous pouvons citer les différents \textbf{"scrapeur"}\footnote{Terme anglais pour désigner un aspirateur de site web} utilisé : 
 			\begin{itemize}
 				\item \textbf{books\_scrape.py} Il a pour but d'aspirer le contenu du site \href{http://www.alwaraq.net/Core/index.jsp?option=1}{alwaraq.net}, qui est un recueil de livres arabes.
 				
@@ -339,14 +339,14 @@
 				
 			\end{itemize} 
 			\par 
-			Il a noté que tout ces scripts utilisent des fonctions d'organisation communes, pour placer chaque fichier acquis dans son répertoire adéquat dans l'arborescence créée par \textbf{initializer.py}, cela a pour but de faciliter l'accès ultérieur aux données bruts, pour les nettoyer et construire les corpus au format \textbf{XML}.
+			Il est à noter que tous ces scripts utilisent des fonctions d'organisation communes, pour placer chaque fichier acquis dans son répertoire adéquat dans l'arborescence créée par \textbf{initializer.py}, cela a pour but de faciliter l'accès ultérieur aux données brutes, pour les nettoyer et construire les corpus au format \textbf{XML}.
 			\par 
-			Autre point important, durant l'aspiration des données, on s'est souvent retrouvé dans le cas où l'information sur la période historique manquait, pour palier à ce problème, et puisque la plus part des documents disposent d'un auteur, nous avons utilisé l'API Wikipédia pour rechercher les informations liées à l'auteur (Date de naissance,mort,nationalité ...), déterminant ainsi la période dans la quelle l'ouvrage a été rédigé.
+			Autre point important, durant l'aspiration des données, on s'est souvent retrouvé dans le cas où l'information sur la période historique manquait, pour palier à ce problème, et puisque tous les documents disposent d'un auteur, nous avons utilisé l'API Wikipédia pour rechercher les informations liées à l'auteur (Date de naissance,mort,nationalité ...), déterminant ainsi la période dans la quelle l'ouvrage a été rédigé.
 			 
 		\subsection{Organisateur de corpus}
 			\paragraph{}
-			Ce module est composé principalement d'un seul script qui effectue deux tâches, une fonction de nettoyage \textbf{"cleaner"}, et un constructeur de fichiers \textbf{\_cleanNotFound} pour générer le fichier \textbf{XML} associé a chaque texte brut extrait.
-			Le format des fichiers XML que nous avons choisis est le suivant : 
+			Ce module est composé principalement d'un seul script qui effectue deux tâches, une fonction de nettoyage \textbf{"cleaner"}, et un constructeur de fichiers \textbf{convertScrapedToXml} pour générer le fichier \textbf{XML} associé à chaque texte brut extrait.
+			Le format des fichiers XML que nous avons choisi est le suivant : 
 			
 			
 			\begin{lstlisting}[language=XML]
@@ -382,14 +382,20 @@
 			
 		\subsection{Corpus reader}
 			\paragraph{}
-			Ce module à joue le rôle d'une interface d'abstraction entre les fichiers XML et le serveur qui désire récupérer ces données,
+			Ce module joue le rôle d'une interface d'abstraction entre les fichiers XML et l'utilisateur qui désire récupérer ces données,
 			ce dernier devra instancier un objet de la classe \textbf{HistoricalCorpus}, cette classe hérite directement de la classe \textbf{nltk.corpus.XMLCorpusReader}, en redéfinissant les méthodes approprié, nous pourrons donc accéder au corpus et ses composants en 
 			invoquant des méthodes comme : 
 			\begin{itemize}
 				
 				\item 
 				\begin{lstlisting}[language=python]
-					def sents(fileid=None,start=None,end=None,era=None,category=None):\end{lstlisting} 
+					def fileids(self,era=None,category=None):\end{lstlisting} 
+				Cette fonction retourne une liste de tous les documents du corpus, ou une partie selon les valeurs des paramètres qui lui sont passer (période,catégorie...).
+				
+				\item 
+				
+				\begin{lstlisting}[language=python]
+				def sents(fileid=None,start=None,end=None,era=None,category=None):\end{lstlisting} 
 				Cette fonction retourne une liste de phrase du corpus tout entier, ou d'une portion selon les valeurs des paramètres qui lui sont passer (période,catégorie...).
 				
 				\item 
@@ -406,7 +412,7 @@
 				\item 
 				\begin{lstlisting}[language=python]
 					def words(fileid=None,start=None,end=None,era=None,category=None):\end{lstlisting}
-				Retourne une liste de tout les mots du corpus (ou d'une partie du corpus).
+				Retourne une liste de tous les mots du corpus (ou d'une partie du corpus).
 				
 				\item 
 				\begin{lstlisting}[language=python]
@@ -420,8 +426,10 @@
 				
 				\item 
 				\begin{lstlisting}[language=python]
-				def getAppearances(get_sents,refresh=False):\end{lstlisting}
-				Méthode utilisant un Generator(voir MMMM) pour parcourir les corpus, en extraire les portions de texte qui contiennent un des mots passé en paramètre, cette méthode sera utilisée dans le mode-automatique (VOIR HHSDJHSD).
+				def word_apparitions_gen(self,dictionarySet,fileid=None,era=None,category=None,stop_words=None,
+				get_sentences=False,context_size=5,
+				lemma=True):\end{lstlisting}
+				Méthode utilisant un Generator(voir MMMM) pour parcourir le corpus, en extraire les portions de texte qui contiennent un des mots passé en paramètre (\(dictionarySet\)), cette méthode sera utilisée dans le mode-automatique (VOIR HHSDJHSD).
 			\end{itemize}
 			\paragraph{Remarque}
 			La force majeure de ce module est qu'il fait appel a plusieurs "Generator"\footnote{Les Generators dans python sont des fonctions qui se comportent comme un Iterator, c'est ç dire qu'il peuvent être utilisé dans une boucle}, en effet, par souci de performance, sachant que nous disposant d'un très gros volume de données sur le disque, charger toutes ces données dans la mémoire à chaque appel d'une des fonctions méthodes du corpusReader serait très coûteux en terme de temps
@@ -532,10 +540,6 @@
 		\subsection{Interface principale}
 			\paragraph{}
 			L'application se présente comme composé de trois partie, une barre d'outils en haut, un panneau d'onglet latéral permettant d'accéder au différentes section de l'application, et une zone d'affichage principale pour afficher le contenu de chaque section. 
-		\subsection{Ajouter corpus}
-		\Large{\< أضف الملفات >}
-			\paragraph{}
-			Dans cette section, la main est donné à l'utilisateur pour uploader un nouveau corpus sur le serveur principal,  il suffit de donner un nom au corpus, une description pour faciliter son utilisation, et sélectionner les fichiers \textbf{XML} correspondant au corpus.
 			
 			%Upload new corpus into the server
 		\subsection{Explorateur de corpus }
